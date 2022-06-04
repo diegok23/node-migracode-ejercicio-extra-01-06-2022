@@ -1,0 +1,26 @@
+{
+  "name": "migracode-ejercicio-extra-01-06-2022",
+  "version": "1.0.0",
+  "description": "Dada la siguiente base de datos, haced una api que soporte las siguientes operaciones:",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "debug": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diegok23/migracode-ejercicio-extra-01-06-2022.git"
+  },
+  "author": "DiegoIK",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/diegok23/migracode-ejercicio-extra-01-06-2022/issues"
+  },
+  "homepage": "https://github.com/diegok23/migracode-ejercicio-extra-01-06-2022#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.16"
+  },
+  "dependencies": {
+    "express": "^4.18.1"
+  }
+}
