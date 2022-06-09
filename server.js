@@ -1,60 +1,81 @@
 const { response } = require('express');
 const express = require('express');
+const fs = require('fs');
 const app = express();
-const port = 3000;
-let users = require('./users.json'); //Cambiado a let para poder usar el filter en DELETE
+const file = './users.json';
 
-app.get('/', (req, res) => res.send('Hello, This is my app!'));
+//AUX FUNCTIONS
 
-/* app.get('/users', (req, res) => {
-    res.send(users);
-}); */
+function getFile() {
+  const text = fs.readFileSync(file);
+  return JSON.parse(text);
+}
 
-// Cómo utilizar el mismo endpoint con y sin un query?
-// Si uso los dos no funciona la búsqueda
-// En el ejercicio de quotes se utilizó un endpoint (/search) para la búsqueda
+function saveToFile(arr) {
+  fs.writeFileSync(file, JSON.stringify(arr, null, 2));
+}
 
-app.get('/users', (req, res) => {
-  if (req) {
-    const termQuery = req.query.name.toLowerCase();
-    const search = users.filter((user) => user.name.toLowerCase().includes(termQuery));
-    res.send(search);
-  } else {
-    res.send(users);
-  }
-});
-
-// Cómo hago para que coincida el tipo de elemento al realizar la búsqueda?
-// Hay que usar Built-in objects: Boolean, Number, etc???
-// para poder buscar con mas certeza, y poder utilizar ===
-// o no es necesario?
-
-app.get('/users/:id', (req, res) => {
-  const user = users.findIndex((user) => user.id === Number(req.params.id)); 
-  // Sin el Number, en el send el id sale como un string y no realiza bien la búsqueda, 
-  // cambia el id pero siempre devuelve el primer objeto
-  res.send(users[user]);
-});
-
-app.post('/users/:name', (req, res) => {
-  let newUser = {
-    id: users.length + 1,
-    name: req.params.name
+const myLogger = (req, res, next) => {
+  const log = {
+    date: new Date(),
+    url: req.url
   };
-  users.push(newUser);
-  res.send(users);
-});
+  console.log(JSON.stringify(log, null, 2));
+  next();
+};
 
-app.put('/users/:id/:name', (req, res) => {
+// FUNCTIONS
+
+const getUsersAll = (req, res) => {
+  const users = getFile();
+  const userName = req.query.name;
+  const search = userName ? users.filter((user) => user.name.toLowerCase().includes(userName)) : users;
+  res.send(search);
+};
+
+const getUserById = (req, res) => {
+  const users = getFile();
   const user = users.findIndex((user) => user.id === Number(req.params.id));
-  users[user].id = Number(req.params.id);
-  users[user].name = req.params.name;
-  res.send(users);
-});
+  res.send(users[user]);
+};
 
-app.delete('/users/:id', (req, res) => {
+const postUser = (req, res) => {
+  const users = getFile();
+  const newUser = req.body;
+  newUser.id = users.length + 1;
+  users.push(newUser);
+  saveToFile(users);
+  res.send(newUser);
+};
+
+const putUser = (req, res) => {
+  const users = getFile();
+  const user = users.find((user) => user.id === Number(req.params.id));
+  user.name = req.body.name;
+  saveToFile(users);
+  res.send(user);
+};
+
+const deleteUser = (req, res) => {
+  let users = getFile();
+  const deletedUser = users.find((user) => user.id === Number(req.params.id));
   users = users.filter((user) => user.id !== Number(req.params.id));
-  res.send(users)
-});
+  saveToFile(users);
+  res.send(deletedUser);
+};
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+//MIDDLEWARE
+
+app.use(express.json()); // para poder traer datos desde el body
+app.use(myLogger);
+app.get('/users', getUsersAll);
+app.get('/users/:id', getUserById);
+app.post('/users', postUser);
+app.put('/users/:id', putUser);
+app.delete('/users/:id', deleteUser);
+
+//SERVER
+
+const port = 3000;
+const url = `http://localhost:${port}/quotes`;
+app.listen(port, () => console.log(`Listening on port ${url}`));
